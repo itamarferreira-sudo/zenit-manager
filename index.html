@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ZENIT MANAGER | IRF EDUC</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              zenit: {
+                950: '#000000', // Preto Absoluto
+                900: '#1A1A1A', // Preto Sidebar (Brand Secondary)
+                800: '#2D2D2D', // Card Dark / Hover Sidebar
+                600: '#FFD000', // PRIMARY BRAND COLOR (Amarelo Vivo)
+                500: '#E6BB00', // Hover State (Amarelo Escuro)
+                400: '#FFE066', // Lighter Yellow
+                100: '#FFF9E0', // Accent Light (Background sutil)
+                50:  '#FFFCF2', // Background Ultra Sutil
+              },
+              gray: {
+                900: '#111827', // Texto Principal
+                800: '#1F2937',
+                700: '#374151', // Texto Secundário
+                600: '#4B5563',
+                500: '#6B7280', // Texto Terciário
+                400: '#9CA3AF',
+                300: '#D1D5DB', // Bordas
+                200: '#E5E7EB', // Bordas Leves
+                100: '#F3F4F6', // Fundo Geral
+                50:  '#F9FAFB', // Fundo Alternativo
+              }
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            boxShadow: {
+              'card': '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
+              'hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+              'modal': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            }
+          }
+        }
+      }
+    </script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #F5F5F5;
+        color: #1A1A1A;
+      }
+      
+      /* Global Inputs Reset - Garantia de Contraste */
+      input, select, textarea {
+        color: #1A1A1A !important;
+        background-color: #FFFFFF !important;
+        border-color: #D1D5DB;
+      }
+      
+      input:focus, select:focus, textarea:focus {
+        border-color: #FFD000 !important;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(255, 208, 0, 0.2);
+      }
+      
+      input::placeholder, textarea::placeholder {
+        color: #9CA3AF;
+      }
+
+      /* Scrollbar estilo Notion */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #E5E7EB; 
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #D1D5DB; 
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "lucide-react": "https://esm.sh/lucide-react@0.292.0?deps=react@18.2.0",
+    "react": "https://esm.sh/react@18.2.0",
+    "react/": "https://esm.sh/react@18.2.0/",
+    "react-dom": "https://esm.sh/react-dom@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "react-router-dom": "https://esm.sh/react-router-dom@6.22.3?deps=react@18.2.0,react-dom@18.2.0",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2",
+    "@google/genai": "https://esm.sh/@google/genai",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
