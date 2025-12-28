@@ -37,12 +37,16 @@ export const TagSelector = ({ type, value, onChange, placeholder = "Selecione...
   }, []);
 
   const fetchTags = async () => {
-    const { data, error } = await supabase.from('system_tags').select('*').eq('type', type).order('label');
-    if (error) {
-        console.error('Erro ao buscar etiquetas:', error);
-        return;
+    try {
+        const { data, error } = await supabase.from('system_tags').select('*').eq('type', type).order('label');
+        if (error) {
+            console.error('Erro detalhado ao buscar etiquetas:', error);
+            return;
+        }
+        setTags(data || []);
+    } catch (err: any) {
+        console.error('Erro de conexão (TagSelector):', err.message || err);
     }
-    setTags(data || []);
   };
 
   const handleCreate = async () => {

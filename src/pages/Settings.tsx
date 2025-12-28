@@ -19,45 +19,28 @@ interface TeamMember {
 }
 
 const REQUIRED_SQL = `
--- ATUALIZAÇÃO: ADICIONAR COLUNA DE CHECKLISTS (JSONB) SE NÃO EXISTIR
-ALTER TABLE tasks ADD COLUMN IF NOT EXISTS checklists JSONB DEFAULT '[]'::jsonb;
--- ATUALIZAÇÃO: ADICIONAR COLUNA DE RESPONSÁVEIS (JSONB)
-ALTER TABLE tasks ADD COLUMN IF NOT EXISTS assignees JSONB DEFAULT '[]'::jsonb;
--- ATUALIZAÇÃO: ADICIONAR COLUNA DE TAGS (ARRAY TEXT)
-ALTER TABLE tasks ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';
-
--- TABELA DE NOTIFICAÇÕES
-CREATE TABLE IF NOT EXISTS notifications (
+-- 1. TABELA DE PROJETOS
+CREATE TABLE IF NOT EXISTS projects (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  title TEXT NOT NULL,
-  message TEXT,
-  link TEXT,
-  read BOOLEAN DEFAULT false,
+  name TEXT NOT NULL,
+  description TEXT,
+  color TEXT DEFAULT '#3B82F6',
+  icon TEXT DEFAULT 'briefcase',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- TABELA DE ETIQUETAS DO SISTEMA
-CREATE TABLE IF NOT EXISTS system_tags (
+-- 2. TABELA DE STATUS DE TAREFAS
+CREATE TABLE IF NOT EXISTS task_statuses (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  label TEXT NOT NULL,
+  project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
   color TEXT NOT NULL,
-  type TEXT CHECK (type IN ('product', 'cost_center', 'niche', 'task')) NOT NULL,
+  type TEXT CHECK (type IN ('not_started', 'active', 'done', 'closed')) DEFAULT 'not_started',
+  order_index INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- TABELA DE COMENTÁRIOS DE TAREFAS
-CREATE TABLE IF NOT EXISTS task_comments (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  task_id UUID REFERENCES tasks(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES auth.users(id),
-  user_name TEXT, 
-  user_avatar TEXT,
-  content TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- TABELA DE CONTATOS (CRM / ALUNOS)
+-- 3. TABELA DE CONTATOS (CRM / ALUNOS)
 CREATE TABLE IF NOT EXISTS contacts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   full_name TEXT NOT NULL,
@@ -80,53 +63,19 @@ CREATE TABLE IF NOT EXISTS contacts (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- TABELA DE TRANSAÇÕES FINANCEIRAS
-CREATE TABLE IF NOT EXISTS transactions (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  description TEXT NOT NULL,
-  amount NUMERIC NOT NULL,
-  type TEXT CHECK (type IN ('income', 'expense')) NOT NULL,
-  status TEXT CHECK (status IN ('paid', 'pending')) DEFAULT 'pending',
-  category TEXT,
-  contact_id UUID REFERENCES contacts(id),
-  due_date DATE NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- TABELA DE PROJETOS
-CREATE TABLE IF NOT EXISTS projects (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL,
-  description TEXT,
-  color TEXT DEFAULT '#3B82F6',
-  icon TEXT DEFAULT 'briefcase',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- TABELA DE STATUS DE TAREFAS
-CREATE TABLE IF NOT EXISTS task_statuses (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  project_id UUID REFERENCES projects(id),
-  name TEXT NOT NULL,
-  color TEXT NOT NULL,
-  type TEXT CHECK (type IN ('not_started', 'active', 'done', 'closed')) DEFAULT 'not_started',
-  order_index INTEGER DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- TABELA DE TAREFAS
+-- 4. TABELA DE TAREFAS
 CREATE TABLE IF NOT EXISTS tasks (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   custom_id TEXT,
-  project_id UUID REFERENCES projects(id),
+  project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
   title TEXT NOT NULL,
   description TEXT,
-  status_id UUID REFERENCES task_statuses(id),
+  status_id UUID REFERENCES task_statuses(id) ON DELETE SET NULL,
   priority TEXT CHECK (priority IN ('low', 'medium', 'high', 'urgent')) DEFAULT 'medium',
   due_date TIMESTAMP WITH TIME ZONE,
   context_type TEXT,
   context_id UUID,
-  contact_id UUID REFERENCES contacts(id),
+  contact_id UUID REFERENCES contacts(id) ON DELETE SET NULL,
   context_name TEXT,
   attachments TEXT[] DEFAULT '{}',
   checklists JSONB DEFAULT '[]'::jsonb,
@@ -135,7 +84,51 @@ CREATE TABLE IF NOT EXISTS tasks (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- TABELA DE CONTEÚDO (POSTS)
+-- 5. TABELA DE NOTIFICAÇÕES
+CREATE TABLE IF NOT EXISTS notifications (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  message TEXT,
+  link TEXT,
+  read BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 6. TABELA DE ETIQUETAS DO SISTEMA
+CREATE TABLE IF NOT EXISTS system_tags (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  label TEXT NOT NULL,
+  color TEXT NOT NULL,
+  type TEXT CHECK (type IN ('product', 'cost_center', 'niche', 'task')) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 7. TABELA DE COMENTÁRIOS DE TAREFAS
+CREATE TABLE IF NOT EXISTS task_comments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  task_id UUID REFERENCES tasks(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id),
+  user_name TEXT, 
+  user_avatar TEXT,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 8. TABELA DE TRANSAÇÕES FINANCEIRAS
+CREATE TABLE IF NOT EXISTS transactions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  description TEXT NOT NULL,
+  amount NUMERIC NOT NULL,
+  type TEXT CHECK (type IN ('income', 'expense')) NOT NULL,
+  status TEXT CHECK (status IN ('paid', 'pending')) DEFAULT 'pending',
+  category TEXT,
+  contact_id UUID REFERENCES contacts(id) ON DELETE SET NULL,
+  due_date DATE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 9. TABELA DE CONTEÚDO (POSTS)
 CREATE TABLE IF NOT EXISTS content_items (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   title TEXT NOT NULL,
@@ -151,7 +144,7 @@ CREATE TABLE IF NOT EXISTS content_items (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- TABELA DE COMENTÁRIOS DE CONTEÚDO
+-- 10. TABELA DE COMENTÁRIOS DE CONTEÚDO
 CREATE TABLE IF NOT EXISTS content_comments (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   content_item_id UUID REFERENCES content_items(id) ON DELETE CASCADE,
@@ -160,7 +153,7 @@ CREATE TABLE IF NOT EXISTS content_comments (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- TABELA DE MÉTRICAS DE ALUNOS
+-- 11. TABELA DE MÉTRICAS DE ALUNOS
 CREATE TABLE IF NOT EXISTS student_metrics (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   contact_id UUID REFERENCES contacts(id) ON DELETE CASCADE,
@@ -172,7 +165,7 @@ CREATE TABLE IF NOT EXISTS student_metrics (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- TABELA DE MEMBROS DA EQUIPE
+-- 12. TABELA DE MEMBROS DA EQUIPE
 CREATE TABLE IF NOT EXISTS team_members (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
@@ -181,6 +174,22 @@ CREATE TABLE IF NOT EXISTS team_members (
   active BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- 13. CORREÇÃO E ATIVAÇÃO DE RLS (SEGURANÇA)
+-- Removemos as políticas antigas se existirem para evitar erro de duplicidade
+ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public tasks" ON tasks;
+CREATE POLICY "Public tasks" ON tasks FOR ALL USING (true);
+
+ALTER TABLE contacts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public contacts" ON contacts;
+CREATE POLICY "Public contacts" ON contacts FOR ALL USING (true);
+
+-- Garantir colunas extras (caso tabela já exista de versão anterior)
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS checklists JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS assignees JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS attachments TEXT[] DEFAULT '{}';
 `;
 
 export const Settings = () => {

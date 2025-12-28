@@ -8,13 +8,18 @@ const SUPABASE_URL = 'https://adezdfmfyvhksayjachp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkZXpkZm1meXZoa3NheWphY2hwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4NjA0ODUsImV4cCI6MjA4MjQzNjQ4NX0.d3CMHnm-tv7BkC762cMwCwbxGFsSQfLx25sNoiRkh9k';
 
 // Inicialização do Cliente
-// IMPORTANTE: 'persistSession: false' é crucial para rodar em ambientes de preview/blob 
-// onde o acesso ao localStorage é restrito ou bloqueado pelo navegador.
+// Adicionamos 'headers' globais para garantir que a API Key seja enviada
+// mesmo se o ambiente for muito restritivo com headers padrão.
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: {
     persistSession: false,
     autoRefreshToken: false,
     detectSessionInUrl: false
+  },
+  global: {
+    headers: {
+      'apikey': SUPABASE_KEY
+    }
   }
 });
 
@@ -24,7 +29,6 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
 export const uploadFile = async (file: File, folder: string = 'general') => {
     try {
         // Sanitiza o nome do arquivo para evitar caracteres inválidos na URL
-        // Remove tudo que não for alfanumérico, ponto, traço ou underline
         const fileExt = file.name.split('.').pop();
         const baseName = file.name.substring(0, file.name.lastIndexOf('.'));
         const cleanName = baseName.replace(/[^a-zA-Z0-9_\-]/g, "_");
